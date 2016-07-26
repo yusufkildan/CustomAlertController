@@ -88,7 +88,7 @@ private class CustomAlertAnimation: NSObject, UIViewControllerAnimatedTransition
 
 // MARK: CustomAlertAction
 
-class CustomAlertAction : NSObject{
+class CustomAlertAction: NSObject {
     private var title: String
     private var style: CustomAlertActionStyle
     private var handler: ((CustomAlertAction!) -> Void)?
@@ -118,7 +118,7 @@ class CustomAlertViewController: UIViewController, UIViewControllerTransitioning
     
     private var buttonBgAndBorderColor = UIColor(red: 227/255.0, green: 227/255.0, blue: 227/255.0, alpha: 1.0)
     
-    private var actions = [AnyObject]()
+    private var actions = [CustomAlertAction]()
     private var buttons = [UIButton]()
     
     convenience init() {
@@ -126,7 +126,25 @@ class CustomAlertViewController: UIViewController, UIViewControllerTransitioning
         self.transitioningDelegate = self
 
         self.modalPresentationStyle = UIModalPresentationStyle.Custom
-
+    }
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        setupView()
+    }
+    
+    override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: NSBundle?) {
+        super.init(nibName:nibNameOrNil, bundle:nibBundleOrNil)
+    }
+    
+    required init(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    private func setupView() {
+        overlayView.backgroundColor = UIColor(red:0.0, green:0.0, blue:0.0, alpha:0.5)
+        
+        alertView.backgroundColor = UIColor.whiteColor()
         alertViewWidth = view.frame.width
         
         self.view.addSubview(overlayView)
@@ -142,29 +160,16 @@ class CustomAlertViewController: UIViewController, UIViewControllerTransitioning
         alertView.autoPinEdge(ALEdge.Bottom, toEdge: ALEdge.Bottom, ofView: self.view)
         alertView.autoSetDimension(ALDimension.Width, toSize: alertViewWidth)
         alertViewHeightConstraint = alertView.autoSetDimension(ALDimension.Height, toSize:0)
-    }
-
-    override func viewWillAppear(animated: Bool) {
-        super.viewWillAppear(animated)
-        setupView()
-    }
-    
-    override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: NSBundle?) {
-        super.init(nibName:nibNameOrNil, bundle:nibBundleOrNil)
-    }
-    
-    required init(coder aDecoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    private func setupView() {
-        overlayView.backgroundColor = UIColor(red:0.0, green:0.0, blue:0.0, alpha:0.5)
-        alertView.backgroundColor = UIColor.whiteColor()
+        
+        alertViewHeight = CGFloat(buttons.count) * buttonHeight
+        alertViewHeightConstraint!.constant = alertViewHeight
+        alertView.frame.size = CGSizeMake(alertViewWidth, alertViewHeightConstraint!.constant)
+        
         
         for i in 0..<buttons.count {
             buttons[i].tag = i
             buttons[i].titleLabel?.font = UIFont(name: "Lato-Semibold", size: 16)
-            let action = actions[buttons[i].tag] as! CustomAlertAction
+            let action = actions[i]
             buttons[i].setTitleColor(action.style.textColor, forState: .Normal)
             buttons[i].setBackgroundImage(createImageFromUIColor(buttonBgAndBorderColor), forState: UIControlState.Highlighted)
             
@@ -177,15 +182,17 @@ class CustomAlertViewController: UIViewController, UIViewControllerTransitioning
             }else {
                 buttons[i].autoPinEdge(ALEdge.Top, toEdge: ALEdge.Bottom, ofView: buttons[i-1])
             }
+            
+            //Create bottom border
+            let border = CALayer()
+            border.backgroundColor = buttonBgAndBorderColor.CGColor
+            border.frame = CGRectMake(0, buttonHeight, alertViewWidth, 1)
+            buttons[i].layer.addSublayer(border)
         }
-        
-        alertViewHeight = CGFloat(buttons.count) * buttonHeight
-        alertViewHeightConstraint!.constant = alertViewHeight
-        alertView.frame.size = CGSizeMake(alertViewWidth, alertViewHeightConstraint!.constant)
     }
     
     @objc private func buttonTapped(sender: UIButton) {
-        let action = actions[sender.tag] as! CustomAlertAction
+        let action = actions[sender.tag]
         if (action.handler != nil) {
             action.handler!(action)
         }
@@ -202,12 +209,6 @@ class CustomAlertViewController: UIViewController, UIViewControllerTransitioning
         button.addTarget(self, action: #selector(CustomAlertViewController.buttonTapped(_:)), forControlEvents: .TouchUpInside)
         buttons.append(button)
         alertView.addSubview(button)
-        
-        //Create bottom border
-        let border = CALayer()
-        border.backgroundColor = buttonBgAndBorderColor.CGColor
-        border.frame = CGRectMake(0, button.frame.height, alertViewWidth, 1)
-        button.layer.addSublayer(border)
     }
     
     private func createImageFromUIColor(color: UIColor) -> UIImage {
