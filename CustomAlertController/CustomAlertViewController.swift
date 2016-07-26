@@ -17,11 +17,11 @@ enum CustomAlertActionStyle: Int {
     var textColor: UIColor {
         switch self {
         case CustomAlertActionStyle.Default:
-            return UIColor(red: 252/255, green: 201/255, blue: 0/255, alpha: 1.0)
+            return UIColor(red: 252/255.0, green: 201/255.0, blue: 0/255.0, alpha: 1.0)
         case CustomAlertActionStyle.Cancel:
-            return UIColor(red: 60/255, green: 60/255, blue: 60/255, alpha: 1.0)
+            return UIColor(red: 60/255.0, green: 60/255.0, blue: 60/255.0, alpha: 1.0)
         case CustomAlertActionStyle.Destructive:
-            return UIColor(red: 220/255, green: 56/255, blue: 56/255, alpha: 1.0)
+            return UIColor(red: 220/255.0, green: 56/255.0, blue: 56/255.0, alpha: 1.0)
         }
     }
 }
@@ -57,13 +57,16 @@ private class CustomAlertAnimation: NSObject, UIViewControllerAnimatedTransition
         let alertController = transitionContext.viewControllerForKey(UITransitionContextToViewControllerKey) as! CustomAlertViewController
         let containerView = transitionContext.containerView()
         
+        alertController.alertView.layoutIfNeeded()
+        alertController.alertView.frame.size = CGSizeMake(alertController.alertViewWidth,alertController.alertView.frame.height)
         alertController.overlayView.alpha = 0.0
         alertController.alertView.transform = CGAffineTransformMakeTranslation(0, alertController.alertView.frame.height)
         
         containerView!.addSubview(alertController.view)
-        UIView.animateWithDuration(0.8, delay: 0, usingSpringWithDamping: 1, initialSpringVelocity: 0, options: UIViewAnimationOptions.CurveEaseOut, animations: {
+        
+        UIView.animateWithDuration(0.8, delay: 0.0, usingSpringWithDamping: 1.0, initialSpringVelocity: 0.0, options: UIViewAnimationOptions.CurveEaseOut, animations: {
                 alertController.overlayView.alpha = 1.0
-                alertController.alertView.transform = CGAffineTransformMakeTranslation(0, 0)
+                alertController.alertView.transform = CGAffineTransformMakeTranslation(0.0, 0.0)
             }) { (finished) in
                 if (finished) {
                     transitionContext.completeTransition(true)
@@ -75,9 +78,9 @@ private class CustomAlertAnimation: NSObject, UIViewControllerAnimatedTransition
         
         let alertController = transitionContext.viewControllerForKey(UITransitionContextFromViewControllerKey) as! CustomAlertViewController
         
-        UIView.animateWithDuration(0.5, delay: 0, usingSpringWithDamping: 1, initialSpringVelocity: 0, options: UIViewAnimationOptions.CurveEaseOut, animations: {
+        UIView.animateWithDuration(0.5, delay: 0.0, usingSpringWithDamping: 1.0, initialSpringVelocity: 0.0, options: UIViewAnimationOptions.CurveEaseOut, animations: {
             alertController.overlayView.alpha = 0.0
-            alertController.alertView.transform = CGAffineTransformMakeTranslation(0, alertController.alertView.frame.height)
+            alertController.alertView.transform = CGAffineTransformMakeTranslation(0.0, alertController.alertView.frame.height)
         }) { (finished) in
             if (finished) {
                 transitionContext.completeTransition(true)
@@ -111,14 +114,12 @@ class CustomAlertViewController: UIViewController, UIViewControllerTransitioning
     
     private var alertView = UIView()
     private var alertViewWidth: CGFloat = 0.0
-    private var alertViewHeightConstraint: NSLayoutConstraint?
-    private var alertViewHeight: CGFloat = 0.0
 
     private var buttonHeight: CGFloat = 60.0
     
     private var buttonBgAndBorderColor = UIColor(red: 227/255.0, green: 227/255.0, blue: 227/255.0, alpha: 1.0)
     
-    private var actions = [CustomAlertAction]()
+    private var actions: Dictionary<UIButton,CustomAlertAction> = [:]
     private var buttons = [UIButton]()
     
     convenience init() {
@@ -159,51 +160,46 @@ class CustomAlertViewController: UIViewController, UIViewControllerTransitioning
         alertView.autoAlignAxis(ALAxis.Vertical, toSameAxisOfView: self.view)
         alertView.autoPinEdge(ALEdge.Bottom, toEdge: ALEdge.Bottom, ofView: self.view)
         alertView.autoSetDimension(ALDimension.Width, toSize: alertViewWidth)
-        alertViewHeightConstraint = alertView.autoSetDimension(ALDimension.Height, toSize:0)
-        
-        alertViewHeight = CGFloat(buttons.count) * buttonHeight
-        alertViewHeightConstraint!.constant = alertViewHeight
-        alertView.frame.size = CGSizeMake(alertViewWidth, alertViewHeightConstraint!.constant)
-        
-        
-        for i in 0..<buttons.count {
-            buttons[i].tag = i
-            buttons[i].titleLabel?.font = UIFont(name: "Lato-Semibold", size: 16)
-            let action = actions[i]
-            buttons[i].setTitleColor(action.style.textColor, forState: .Normal)
-            buttons[i].setBackgroundImage(createImageFromUIColor(buttonBgAndBorderColor), forState: UIControlState.Highlighted)
+     
+        for (index,button) in buttons.enumerate() {
+            button.titleLabel?.font = UIFont(name: "Lato-Semibold", size: 16.0)
+            button.setTitleColor(actions[button]!.style.textColor, forState: .Normal)
+            button.setBackgroundImage(createImageFromUIColor(buttonBgAndBorderColor), forState: UIControlState.Highlighted)
             
-            buttons[i].autoPinEdgeToSuperviewEdge(ALEdge.Left)
-            buttons[i].autoPinEdgeToSuperviewEdge(ALEdge.Right)
-            buttons[i].autoSetDimension(ALDimension.Height, toSize: buttonHeight)
+            button.autoPinEdgeToSuperviewEdge(ALEdge.Left)
+            button.autoPinEdgeToSuperviewEdge(ALEdge.Right)
+            button.autoSetDimension(ALDimension.Height, toSize: buttonHeight)
             
-            if i == 0 {
-                buttons[i].autoPinEdge(ALEdge.Top, toEdge: ALEdge.Top, ofView: alertView)
+            if button  == buttons.first {
+                button.autoPinEdge(ALEdge.Top, toEdge: ALEdge.Top, ofView: alertView)
             }else {
-                buttons[i].autoPinEdge(ALEdge.Top, toEdge: ALEdge.Bottom, ofView: buttons[i-1])
+                button.autoPinEdge(ALEdge.Top, toEdge: ALEdge.Bottom, ofView: buttons[index-1])
+            }
+            if let lastButton = buttons.last {
+                lastButton.autoPinEdge(ALEdge.Bottom, toEdge: ALEdge.Bottom, ofView: alertView)
             }
             
             //Create bottom border
             let border = CALayer()
             border.backgroundColor = buttonBgAndBorderColor.CGColor
-            border.frame = CGRectMake(0, buttonHeight, alertViewWidth, 1)
-            buttons[i].layer.addSublayer(border)
-        }
-    }
+            border.frame = CGRectMake(0.0, buttonHeight, alertViewWidth, 1.0)
+            button.layer.addSublayer(border)
     
+        }
+
+    }
+
     @objc private func buttonTapped(sender: UIButton) {
-        let action = actions[sender.tag]
-        if (action.handler != nil) {
-            action.handler!(action)
+        let action = actions[sender]
+        if (action!.handler != nil) {
+            action!.handler!(action)
         }
         self.dismissViewControllerAnimated(true, completion: nil)
     }
     
     func addAction(action: CustomAlertAction) {
-        
-        actions.append(action)
-
         let button = UIButton(type: UIButtonType.Custom)
+        actions[button] = action
         button.setTitle(action.title, forState: .Normal)
         button.enabled = action.enabled
         button.addTarget(self, action: #selector(CustomAlertViewController.buttonTapped(_:)), forControlEvents: .TouchUpInside)
@@ -212,7 +208,7 @@ class CustomAlertViewController: UIViewController, UIViewControllerTransitioning
     }
     
     private func createImageFromUIColor(color: UIColor) -> UIImage {
-        let rect = CGRectMake(0, 0, 1, 1)
+        let rect = CGRectMake(0.0, 0.0, 1.0, 1.0)
         UIGraphicsBeginImageContext(rect.size)
         let contextRef: CGContextRef = UIGraphicsGetCurrentContext()!
         CGContextSetFillColorWithColor(contextRef, color.CGColor)

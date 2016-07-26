@@ -39,9 +39,8 @@ class ViewController: UIViewController {
         alertController.addAction(CustomAlertAction(title: "Cancel", style: CustomAlertActionStyle.Cancel, handler: { (_) in
             print("Deneme3")
         }))
-
+        
         presentViewController(alertController, animated: true, completion: nil)
-     
     }
 
 }
