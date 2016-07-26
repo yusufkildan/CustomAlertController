@@ -26,38 +26,33 @@ enum CustomAlertActionStyle: Int {
     }
 }
 
-enum CustomAlertControllerStyle: Int {
-    case ActionSheet
-    case Alert
-}
-
 // MARK - CustomAlertAnimation
 
-class CustomAlertAnimation: NSObject, UIViewControllerAnimatedTransitioning {
+private class CustomAlertAnimation: NSObject, UIViewControllerAnimatedTransitioning {
     
-    let isPresenting: Bool
+    private let isPresenting: Bool
     
     init(isPresenting: Bool) {
         self.isPresenting = isPresenting
     }
     
-    func transitionDuration(transitionContext: UIViewControllerContextTransitioning?) -> NSTimeInterval {
-        if (isPresenting) {
-            return 0.5
+    @objc private func transitionDuration(transitionContext: UIViewControllerContextTransitioning?) -> NSTimeInterval {
+        if isPresenting {
+            return 0.8
         } else {
             return 0.5
         }
     }
     
-    func animateTransition(transitionContext: UIViewControllerContextTransitioning) {
-        if (isPresenting) {
+    @objc private func animateTransition(transitionContext: UIViewControllerContextTransitioning) {
+        if isPresenting {
             self.presentAnimateTransition(transitionContext)
         } else {
             self.dismissAnimateTransition(transitionContext)
         }
     }
     
-    func presentAnimateTransition(transitionContext: UIViewControllerContextTransitioning) {
+    @objc private func presentAnimateTransition(transitionContext: UIViewControllerContextTransitioning) {
         
         let alertController = transitionContext.viewControllerForKey(UITransitionContextToViewControllerKey) as! CustomAlertViewController
         let containerView = transitionContext.containerView()
@@ -66,7 +61,7 @@ class CustomAlertAnimation: NSObject, UIViewControllerAnimatedTransitioning {
         alertController.alertView.transform = CGAffineTransformMakeTranslation(0, alertController.alertView.frame.height)
         
         containerView!.addSubview(alertController.view)
-        UIView.animateWithDuration(0.5, delay: 0, usingSpringWithDamping: 1, initialSpringVelocity: 0, options: UIViewAnimationOptions.CurveEaseOut, animations: {
+        UIView.animateWithDuration(0.8, delay: 0, usingSpringWithDamping: 1, initialSpringVelocity: 0, options: UIViewAnimationOptions.CurveEaseOut, animations: {
                 alertController.overlayView.alpha = 1.0
                 alertController.alertView.transform = CGAffineTransformMakeTranslation(0, 0)
             }) { (finished) in
@@ -76,7 +71,7 @@ class CustomAlertAnimation: NSObject, UIViewControllerAnimatedTransitioning {
         }
     }
     
-    func dismissAnimateTransition(transitionContext: UIViewControllerContextTransitioning) {
+    @objc private func dismissAnimateTransition(transitionContext: UIViewControllerContextTransitioning) {
         
         let alertController = transitionContext.viewControllerForKey(UITransitionContextFromViewControllerKey) as! CustomAlertViewController
         
@@ -94,11 +89,11 @@ class CustomAlertAnimation: NSObject, UIViewControllerAnimatedTransitioning {
 // MARK: CustomAlertAction
 
 class CustomAlertAction : NSObject{
-    var title: String
-    var style: CustomAlertActionStyle
-    var handler: ((CustomAlertAction!) -> Void)?
+    private var title: String
+    private var style: CustomAlertActionStyle
+    private var handler: ((CustomAlertAction!) -> Void)?
     
-    var enabled: Bool
+    private var enabled: Bool
     
     required init(title: String, style: CustomAlertActionStyle, handler: ((CustomAlertAction!) -> Void)?) {
         self.title = title
@@ -106,43 +101,32 @@ class CustomAlertAction : NSObject{
         self.handler = handler
         self.enabled = true
     }
-    
 }
 
 // MARK: CustomAlertViewController
 
 class CustomAlertViewController: UIViewController, UIViewControllerTransitioningDelegate {
-    var preferredStyle: CustomAlertControllerStyle?
-    
-    //Overlay View
-    var overlayView = UIView()
-    var overlayColor = UIColor(red:0, green:0, blue:0, alpha:0.5)
-    
-    //Alert View
-    var alertView = UIView()
-    var alertViewBgColor = UIColor.whiteColor()
-    var alertViewWidth: CGFloat = 0
-    var alertViewHeightConstraint: NSLayoutConstraint!
-    var alertViewHeight: CGFloat = 0.0
 
+    private var overlayView = UIView()
     
-    var buttonHeight: CGFloat = 60.0
+    private var alertView = UIView()
+    private var alertViewWidth: CGFloat = 0.0
+    private var alertViewHeightConstraint: NSLayoutConstraint?
+    private var alertViewHeight: CGFloat = 0.0
+
+    private var buttonHeight: CGFloat = 60.0
     
-    var actions = [AnyObject]()
+    private var buttonBgAndBorderColor = UIColor(red: 227/255.0, green: 227/255.0, blue: 227/255.0, alpha: 1.0)
     
-    var buttons = [UIButton]()
+    private var actions = [AnyObject]()
+    private var buttons = [UIButton]()
     
-    let buttonFont = UIFont(name: "Lato-Semibold", size: 16)
-    let buttonBackgroundHighlightedColor = UIColor(red: 227/255, green: 227/255, blue: 227/255, alpha: 1.0)
-    
-    convenience init(preferredStyle: CustomAlertControllerStyle) {
+    convenience init() {
         self.init(nibName: nil, bundle: nil)
-        self.preferredStyle = preferredStyle
         self.transitioningDelegate = self
 
         self.modalPresentationStyle = UIModalPresentationStyle.Custom
 
-        
         alertViewWidth = view.frame.width
         
         self.view.addSubview(overlayView)
@@ -158,13 +142,11 @@ class CustomAlertViewController: UIViewController, UIViewControllerTransitioning
         alertView.autoPinEdge(ALEdge.Bottom, toEdge: ALEdge.Bottom, ofView: self.view)
         alertView.autoSetDimension(ALDimension.Width, toSize: alertViewWidth)
         alertViewHeightConstraint = alertView.autoSetDimension(ALDimension.Height, toSize:0)
-
     }
-  
+
     override func viewWillAppear(animated: Bool) {
-        super.viewWillAppear(true)
+        super.viewWillAppear(animated)
         setupView()
-        
     }
     
     override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: NSBundle?) {
@@ -175,16 +157,16 @@ class CustomAlertViewController: UIViewController, UIViewControllerTransitioning
         fatalError("init(coder:) has not been implemented")
     }
     
-    func setupView() {
-        overlayView.backgroundColor = overlayColor
-        alertView.backgroundColor = alertViewBgColor
+    private func setupView() {
+        overlayView.backgroundColor = UIColor(red:0.0, green:0.0, blue:0.0, alpha:0.5)
+        alertView.backgroundColor = UIColor.whiteColor()
         
         for i in 0..<buttons.count {
-            let action = actions[buttons[i].tag - 1] as! CustomAlertAction
-            buttons[i].titleLabel?.font = buttonFont
+            buttons[i].tag = i
+            buttons[i].titleLabel?.font = UIFont(name: "Lato-Semibold", size: 16)
+            let action = actions[buttons[i].tag] as! CustomAlertAction
             buttons[i].setTitleColor(action.style.textColor, forState: .Normal)
-            buttons[i].setBackgroundImage(createImageFromUIColor(buttonBackgroundHighlightedColor), forState: UIControlState.Highlighted)
-            
+            buttons[i].setBackgroundImage(createImageFromUIColor(buttonBgAndBorderColor), forState: UIControlState.Highlighted)
             
             buttons[i].autoPinEdgeToSuperviewEdge(ALEdge.Left)
             buttons[i].autoPinEdgeToSuperviewEdge(ALEdge.Right)
@@ -192,21 +174,18 @@ class CustomAlertViewController: UIViewController, UIViewControllerTransitioning
             
             if i == 0 {
                 buttons[i].autoPinEdge(ALEdge.Top, toEdge: ALEdge.Top, ofView: alertView)
-                
-            }else  {
+            }else {
                 buttons[i].autoPinEdge(ALEdge.Top, toEdge: ALEdge.Bottom, ofView: buttons[i-1])
             }
         }
         
         alertViewHeight = CGFloat(buttons.count) * buttonHeight
-        alertViewHeightConstraint.constant = alertViewHeight
-        alertView.frame.size = CGSizeMake(alertViewWidth, alertViewHeightConstraint.constant)
+        alertViewHeightConstraint!.constant = alertViewHeight
+        alertView.frame.size = CGSizeMake(alertViewWidth, alertViewHeightConstraint!.constant)
     }
     
-
-    
-    func buttonTapped(sender: UIButton) {
-        let action = actions[sender.tag - 1] as! CustomAlertAction
+    @objc private func buttonTapped(sender: UIButton) {
+        let action = actions[sender.tag] as! CustomAlertAction
         if (action.handler != nil) {
             action.handler!(action)
         }
@@ -221,21 +200,17 @@ class CustomAlertViewController: UIViewController, UIViewControllerTransitioning
         button.setTitle(action.title, forState: .Normal)
         button.enabled = action.enabled
         button.addTarget(self, action: #selector(CustomAlertViewController.buttonTapped(_:)), forControlEvents: .TouchUpInside)
-        button.tag = buttons.count + 1
         buttons.append(button)
         alertView.addSubview(button)
         
         //Create bottom border
         let border = CALayer()
-        border.backgroundColor = UIColor(red: 227/255, green: 227/255, blue: 227/255, alpha: 1.0).CGColor
+        border.backgroundColor = buttonBgAndBorderColor.CGColor
         border.frame = CGRectMake(0, button.frame.height, alertViewWidth, 1)
         button.layer.addSublayer(border)
-        
     }
     
- 
-    
-    func createImageFromUIColor(color: UIColor) -> UIImage {
+    private func createImageFromUIColor(color: UIColor) -> UIImage {
         let rect = CGRectMake(0, 0, 1, 1)
         UIGraphicsBeginImageContext(rect.size)
         let contextRef: CGContextRef = UIGraphicsGetCurrentContext()!
@@ -243,14 +218,17 @@ class CustomAlertViewController: UIViewController, UIViewControllerTransitioning
         CGContextFillRect(contextRef, rect)
         let img: UIImage = UIGraphicsGetImageFromCurrentImageContext()
         UIGraphicsEndImageContext()
+        
         return img
     }
     
-    func animationControllerForPresentedController(presented: UIViewController, presentingController presenting: UIViewController, sourceController source: UIViewController) -> UIViewControllerAnimatedTransitioning? {
+   @objc internal func animationControllerForPresentedController(presented: UIViewController, presentingController presenting: UIViewController, sourceController source: UIViewController) -> UIViewControllerAnimatedTransitioning? {
+    
         return CustomAlertAnimation(isPresenting: true)
     }
     
-    func animationControllerForDismissedController(dismissed: UIViewController) -> UIViewControllerAnimatedTransitioning? {
+   @objc internal func animationControllerForDismissedController(dismissed: UIViewController) -> UIViewControllerAnimatedTransitioning? {
+    
         return CustomAlertAnimation(isPresenting: false)
     }
 }

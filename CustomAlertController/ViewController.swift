@@ -29,7 +29,7 @@ class ViewController: UIViewController {
 
     func open() {
     
-        let alertController = CustomAlertViewController(preferredStyle: CustomAlertControllerStyle.ActionSheet)
+        let alertController = CustomAlertViewController()
         alertController.addAction(CustomAlertAction(title: "Change Location", style: CustomAlertActionStyle.Default, handler: { (_) in
             print("Deneme1")
         }))
